@@ -6,7 +6,6 @@
   "scripts": {
     "lint": "standardx",
     "fix": "standardx --fix",
-    "pretest": "npm run lint",
     "test": "mocha test/**/*.js",
     "coverage": "nyc --reporter=lcov --reporter=text npm run test",
     "precoverage-publish": "npm run coverage",
