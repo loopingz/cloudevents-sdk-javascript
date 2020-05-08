@@ -2,30 +2,20 @@ const Constants = require("./constants.js");
 const Commons = require("./commons.js");
 const CloudEvent = require("../../cloudevent.js");
 
-const {
-  isDefinedOrThrow,
-  isStringOrObjectOrThrow
-} = require("../../utils/fun.js");
+const { isDefinedOrThrow, isStringOrObjectOrThrow } = require("../../utils/fun.js");
 
 function validateArgs(payload, attributes) {
   Array.of(payload)
-    .filter((p) => isDefinedOrThrow(p,
-      { message: "payload is null or undefined" }))
-    .filter((p) => isStringOrObjectOrThrow(p,
-      { message: "payload must be an object or string" }))
+    .filter(p => isDefinedOrThrow(p, { message: "payload is null or undefined" }))
+    .filter(p => isStringOrObjectOrThrow(p, { message: "payload must be an object or string" }))
     .shift();
 
   Array.of(attributes)
-    .filter((a) => isDefinedOrThrow(a,
-      { message: "attributes is null or undefined" }))
+    .filter(a => isDefinedOrThrow(a, { message: "attributes is null or undefined" }))
     .shift();
 }
 
-function StructuredHTTPReceiver(
-  parserByMime,
-  setterByAttribute,
-  allowedContentTypes,
-  Spec) {
+function StructuredHTTPReceiver(parserByMime, setterByAttribute, allowedContentTypes, Spec) {
   this.parserByMime = parserByMime;
   this.setterByAttribute = setterByAttribute;
   this.allowedContentTypes = allowedContentTypes;
@@ -33,15 +23,16 @@ function StructuredHTTPReceiver(
   this.spec = new Spec();
 }
 
-StructuredHTTPReceiver.prototype.check = function(payload, headers) {
+StructuredHTTPReceiver.prototype.check = function (payload, headers) {
   validateArgs(payload, headers);
 
   const sanityHeaders = Commons.sanityAndClone(headers);
 
   // Validation Level 1
-  if (!this.allowedContentTypes
-    .includes(sanityHeaders[Constants.HEADER_CONTENT_TYPE])) {
+  if (!this.allowedContentTypes.includes(sanityHeaders[Constants.HEADER_CONTENT_TYPE])) {
     const err = new TypeError("invalid content type");
+    // TODO Create a custom TypeError to add the errors attribute
+    // @ts-ignore
     err.errors = [sanityHeaders[Constants.HEADER_CONTENT_TYPE]];
     throw err;
   }
@@ -49,7 +40,7 @@ StructuredHTTPReceiver.prototype.check = function(payload, headers) {
   // No erros! Its contains the minimum required attributes
 };
 
-StructuredHTTPReceiver.prototype.parse = function(payload, headers) {
+StructuredHTTPReceiver.prototype.parse = function (payload, headers) {
   this.check(payload, headers);
 
   const sanityHeaders = Commons.sanityAndClone(headers);
@@ -64,8 +55,8 @@ StructuredHTTPReceiver.prototype.parse = function(payload, headers) {
   const cloudevent = new CloudEvent(this.Spec);
 
   Array.from(Object.keys(this.setterByAttribute))
-    .filter((attribute) => event[attribute])
-    .forEach((attribute) => {
+    .filter(attribute => event[attribute])
+    .forEach(attribute => {
       const setterName = this.setterByAttribute[attribute].name;
       const parserFun = this.setterByAttribute[attribute].parser;
 
@@ -78,12 +69,10 @@ StructuredHTTPReceiver.prototype.parse = function(payload, headers) {
 
   // Every unprocessed attribute should be an extension
   Array.from(Object.keys(event))
-    .filter((attribute) => !processedAttributes.includes(attribute))
-    .forEach((extension) =>
-      cloudevent.addExtension(extension, event[extension])
-    );
+    .filter(attribute => !processedAttributes.includes(attribute))
+    .forEach(extension => cloudevent.addExtension(extension, event[extension]));
 
   return cloudevent;
 };
 
-module.exports = StructuredHTTPReceiver;
+export { StructuredHTTPReceiver };

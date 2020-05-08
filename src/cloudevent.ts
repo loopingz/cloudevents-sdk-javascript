@@ -1,5 +1,5 @@
-const Spec = require("./specs/spec_1.js");
-const Formatter = require("./formats/json/formatter.js");
+import { Spec1 as Spec } from "./specs/spec_1";
+import { JSONFormatter as Formatter } from "./formats/json/formatter";
 
 /*
  * Class created using the Builder Design Pattern.
@@ -7,9 +7,13 @@ const Formatter = require("./formats/json/formatter.js");
  * https://en.wikipedia.org/wiki/Builder_pattern
  */
 class CloudEvent {
+  spec: any;
+  formatter: Formatter;
+  extensions: { [key: string]: any };
+
   constructor(_spec, _formatter) {
-    this.spec = (_spec) ? new _spec(CloudEvent) : new Spec(CloudEvent);
-    this.formatter = (_formatter) ? new _formatter() : new Formatter();
+    this.spec = _spec ? new _spec(CloudEvent) : new Spec(CloudEvent);
+    this.formatter = _formatter ? new _formatter() : new Formatter();
 
     // The map of extensions
     this.extensions = {};

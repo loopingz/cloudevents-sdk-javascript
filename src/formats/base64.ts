@@ -1,4 +1,6 @@
 class Base64Parser {
+  decorator: any;
+
   constructor(decorator) {
     this.decorator = decorator;
   }
@@ -13,4 +15,4 @@ class Base64Parser {
   }
 }
 
-module.exports = Base64Parser;
+export { Base64Parser };

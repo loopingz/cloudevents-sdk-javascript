@@ -1,10 +1,10 @@
-const axios = require("axios");
+import axios from "axios";
 
-const Constants = require("./constants.js");
+import { Constants } from "./constants";
+
 const defaults = {};
 defaults[Constants.HEADERS] = {};
-defaults[Constants.HEADERS][Constants.HEADER_CONTENT_TYPE] =
-  Constants.DEFAULT_CONTENT_TYPE;
+defaults[Constants.HEADERS][Constants.HEADER_CONTENT_TYPE] = Constants.DEFAULT_CONTENT_TYPE;
 
 function BinaryHTTPEmitter(config, headerByGetter, extensionPrefix) {
   this.config = Object.assign({}, defaults, config);
@@ -12,30 +12,27 @@ function BinaryHTTPEmitter(config, headerByGetter, extensionPrefix) {
   this.extensionPrefix = extensionPrefix;
 }
 
-BinaryHTTPEmitter.prototype.emit = function(cloudevent) {
+BinaryHTTPEmitter.prototype.emit = function (cloudevent) {
   const config = Object.assign({}, this.config);
   const headers = Object.assign({}, this.config[Constants.HEADERS]);
 
   Object.keys(this.headerByGetter)
-    .filter((getter) => cloudevent[getter]())
-    .forEach((getter) => {
+    .filter(getter => cloudevent[getter]())
+    .forEach(getter => {
       const header = this.headerByGetter[getter];
-      headers[header.name] =
-        header.parser(
-          cloudevent[getter]()
-        );
+      headers[header.name] = header.parser(cloudevent[getter]());
     });
 
   // Set the cloudevent payload
   const formatted = cloudevent.format();
   let data = formatted.data;
-  data = (formatted.data_base64 ? formatted.data_base64 : data);
+  data = formatted.data_base64 ? formatted.data_base64 : data;
 
   // Have extensions?
   const exts = cloudevent.getExtensions();
   Object.keys(exts)
-    .filter((ext) => Object.hasOwnProperty.call(exts, ext))
-    .forEach((ext) => {
+    .filter(ext => Object.hasOwnProperty.call(exts, ext))
+    .forEach(ext => {
       headers[this.extensionPrefix + ext] = exts[ext];
     });
 
@@ -46,4 +43,4 @@ BinaryHTTPEmitter.prototype.emit = function(cloudevent) {
   return axios.request(config);
 };
 
-module.exports = BinaryHTTPEmitter;
+export { BinaryHTTPEmitter };

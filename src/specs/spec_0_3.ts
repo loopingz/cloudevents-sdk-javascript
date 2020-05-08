@@ -1,11 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const Ajv = require("ajv");
 
-const {
-  isBase64,
-  clone,
-  asData
-} = require("../utils/fun.js");
+const { isBase64, clone, asData } = require("../utils/fun.js");
 
 const RESERVED_ATTRIBUTES = {
   type: "type",
@@ -20,9 +16,10 @@ const RESERVED_ATTRIBUTES = {
   data: "data"
 };
 
-const SUPPORTED_CONTENT_ENCODING = {};
-SUPPORTED_CONTENT_ENCODING.base64 = {
-  check: (data) => isBase64(data)
+const SUPPORTED_CONTENT_ENCODING = {
+  base64: {
+    check: data => isBase64(data)
+  }
 };
 
 const schema = {
@@ -35,10 +32,7 @@ const schema = {
       type: "string"
     },
     data: {
-      type: [
-        "object",
-        "string"
-      ]
+      type: ["object", "string"]
     },
     event: {
       properties: {
@@ -73,12 +67,7 @@ const schema = {
           $ref: "#/definitions/source"
         }
       },
-      required: [
-        "specversion",
-        "id",
-        "type",
-        "source"
-      ],
+      required: ["specversion", "id", "type", "source"],
       type: "object"
     },
     id: {
@@ -136,27 +125,27 @@ function Spec03(_caller) {
   /*
    * Inject compatibility methods
    */
-  this.caller.prototype.dataContentEncoding = function(encoding) {
+  this.caller.prototype.dataContentEncoding = function (encoding) {
     this.spec.dataContentEncoding(encoding);
     return this;
   };
-  this.caller.prototype.getDataContentEncoding = function() {
+  this.caller.prototype.getDataContentEncoding = function () {
     return this.spec.getDataContentEncoding();
   };
 
-  this.caller.prototype.dataContentType = function(contentType) {
+  this.caller.prototype.dataContentType = function (contentType) {
     this.spec.dataContentType(contentType);
     return this;
   };
-  this.caller.prototype.getDataContentType = function() {
+  this.caller.prototype.getDataContentType = function () {
     return this.spec.getDataContentType();
   };
 
-  this.caller.prototype.subject = function(_subject) {
+  this.caller.prototype.subject = function (_subject) {
     this.spec.subject(_subject);
     return this;
   };
-  this.caller.prototype.getSubject = function() {
+  this.caller.prototype.getSubject = function () {
     return this.spec.getSubject();
   };
 }
@@ -164,132 +153,131 @@ function Spec03(_caller) {
 /*
  * Check the spec constraints
  */
-Spec03.prototype.check = function(ce) {
-  const toCheck = (!ce ? this.payload : ce);
+Spec03.prototype.check = function (ce) {
+  const toCheck = !ce ? this.payload : ce;
 
   if (!isValidAgainstSchema(toCheck)) {
     const err = new TypeError("invalid payload");
+    // TODO Create a custom TypeError to add the errors attribute
+    // @ts-ignore
     err.errors = isValidAgainstSchema.errors;
     throw err;
   }
 
   Array.of(toCheck)
-    .filter((tc) => tc.datacontentencoding)
-    .map((tc) => tc.datacontentencoding.toLocaleLowerCase("en-US"))
-    .filter((dce) => !Object.keys(SUPPORTED_CONTENT_ENCODING).includes(dce))
-    .forEach((dce) => {
+    .filter(tc => tc.datacontentencoding)
+    .map(tc => tc.datacontentencoding.toLocaleLowerCase("en-US"))
+    .filter(dce => !Object.keys(SUPPORTED_CONTENT_ENCODING).includes(dce))
+    .forEach(dce => {
       const err = new TypeError("invalid payload");
-      err.errors = [
-        `Unsupported content encoding: ${dce}`
-      ];
+      // TODO Create a custom TypeError to add the errors attribute
+      // @ts-ignore
+      err.errors = [`Unsupported content encoding: ${dce}`];
       throw err;
     });
 
   Array.of(toCheck)
-    .filter((tc) => tc.datacontentencoding)
-    .filter((tc) => (typeof tc.data) === "string")
-    .map((tc) => {
+    .filter(tc => tc.datacontentencoding)
+    .filter(tc => typeof tc.data === "string")
+    .map(tc => {
       const newtc = clone(tc);
-      newtc.datacontentencoding =
-        newtc.datacontentencoding.toLocaleLowerCase("en-US");
+      newtc.datacontentencoding = newtc.datacontentencoding.toLocaleLowerCase("en-US");
 
       return newtc;
     })
-    .filter((tc) => Object.keys(SUPPORTED_CONTENT_ENCODING)
-      .includes(tc.datacontentencoding))
-    .filter((tc) => !SUPPORTED_CONTENT_ENCODING[tc.datacontentencoding]
-      .check(tc.data))
-    .forEach((tc) => {
+    .filter(tc => Object.keys(SUPPORTED_CONTENT_ENCODING).includes(tc.datacontentencoding))
+    .filter(tc => !SUPPORTED_CONTENT_ENCODING[tc.datacontentencoding].check(tc.data))
+    .forEach(tc => {
       const err = new TypeError("invalid payload");
-      err.errors = [
-        `Invalid content encoding of data: ${tc.data}`
-      ];
+      // TODO Create a custom TypeError to add the errors attribute
+      // @ts-ignore
+      err.errors = [`Invalid content encoding of data: ${tc.data}`];
       throw err;
     });
 };
 
-Spec03.prototype.id = function(_id) {
+Spec03.prototype.id = function (_id) {
   this.payload.id = _id;
   return this;
 };
 
-Spec03.prototype.getId = function() {
+Spec03.prototype.getId = function () {
   return this.payload.id;
 };
 
-Spec03.prototype.source = function(_source) {
+Spec03.prototype.source = function (_source) {
   this.payload.source = _source;
   return this;
 };
 
-Spec03.prototype.getSource = function() {
+Spec03.prototype.getSource = function () {
   return this.payload.source;
 };
 
-Spec03.prototype.specversion = function() {
+Spec03.prototype.specversion = function () {
   // does not set! This is right
   return this;
 };
 
-Spec03.prototype.getSpecversion = function() {
+Spec03.prototype.getSpecversion = function () {
   return this.payload.specversion;
 };
 
-Spec03.prototype.type = function(_type) {
+Spec03.prototype.type = function (_type) {
   this.payload.type = _type;
   return this;
 };
 
-Spec03.prototype.getType = function() {
+Spec03.prototype.getType = function () {
   return this.payload.type;
 };
 
-Spec03.prototype.dataContentEncoding = function(encoding) {
+Spec03.prototype.dataContentEncoding = function (encoding) {
   this.payload.datacontentencoding = encoding;
   return this;
 };
 
-Spec03.prototype.getDataContentEncoding = function() {
+Spec03.prototype.getDataContentEncoding = function () {
   return this.payload.datacontentencoding;
 };
 
-Spec03.prototype.dataContentType = function(_contenttype) {
+Spec03.prototype.dataContentType = function (_contenttype) {
   this.payload.datacontenttype = _contenttype;
   return this;
 };
-Spec03.prototype.getDataContentType = function() {
+Spec03.prototype.getDataContentType = function () {
   return this.payload.datacontenttype;
 };
 
-Spec03.prototype.schemaurl = function(_schemaurl) {
+Spec03.prototype.schemaurl = function (_schemaurl) {
   this.payload.schemaurl = _schemaurl;
   return this;
 };
-Spec03.prototype.getSchemaurl = function() {
+Spec03.prototype.getSchemaurl = function () {
   return this.payload.schemaurl;
 };
 
-Spec03.prototype.subject = function(_subject) {
+Spec03.prototype.subject = function (_subject) {
   this.payload.subject = _subject;
   return this;
 };
-Spec03.prototype.getSubject = function() {
+Spec03.prototype.getSubject = function () {
   return this.payload.subject;
 };
 
-Spec03.prototype.time = function(_time) {
+Spec03.prototype.time = function (_time) {
   this.payload.time = _time.toISOString();
   return this;
 };
-Spec03.prototype.getTime = function() {
+Spec03.prototype.getTime = function () {
   return this.payload.time;
 };
 
-Spec03.prototype.data = function(_data) {
+Spec03.prototype.data = function (_data) {
   this.payload.data = _data;
   return this;
 };
-Spec03.prototype.getData = function() {
+Spec03.prototype.getData = function () {
   const dct = this.payload.datacontenttype;
   const dce = this.payload.datacontentencoding;
 
@@ -300,7 +288,7 @@ Spec03.prototype.getData = function() {
   return this.payload.data;
 };
 
-Spec03.prototype.addExtension = function(key, value) {
+Spec03.prototype.addExtension = function (key, value) {
   if (!Object.prototype.hasOwnProperty.call(RESERVED_ATTRIBUTES, key)) {
     this.payload[key] = value;
   } else {
@@ -309,4 +297,4 @@ Spec03.prototype.addExtension = function(key, value) {
   return this;
 };
 
-module.exports = Spec03;
+export { Spec03 };

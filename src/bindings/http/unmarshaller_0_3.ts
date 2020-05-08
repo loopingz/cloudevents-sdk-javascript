@@ -8,12 +8,12 @@ const RECEIVER_BY_BINDING = {
   binary: new BinaryReceiver()
 };
 
-const Unmarshaller = function() {
+const Unmarshaller = function () {
   this.unmarshaller = new GenericUnmarshaller(RECEIVER_BY_BINDING);
 };
 
-Unmarshaller.prototype.unmarshall = function(payload, headers) {
+Unmarshaller.prototype.unmarshall = function (payload, headers) {
   return this.unmarshaller.unmarshall(payload, headers);
 };
 
-module.exports = Unmarshaller;
+export { Unmarshaller };

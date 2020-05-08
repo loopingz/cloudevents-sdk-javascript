@@ -4,19 +4,13 @@ const Commons = require("./commons.js");
 const STRUCTURED = "structured";
 const BINARY = "binary";
 
-const allowedBinaryContentTypes = [
-  Constants.MIME_JSON,
-  Constants.MIME_OCTET_STREAM
-];
+const allowedBinaryContentTypes = [Constants.MIME_JSON, Constants.MIME_OCTET_STREAM];
 
-const allowedStructuredContentTypes = [
-  Constants.MIME_CE_JSON
-];
+const allowedStructuredContentTypes = [Constants.MIME_CE_JSON];
 
 // Is it binary or structured?
 function resolveBindingName(payload, headers) {
-  const contentType =
-    Commons.sanityContentType(headers[Constants.HEADER_CONTENT_TYPE]);
+  const contentType = Commons.sanityContentType(headers[Constants.HEADER_CONTENT_TYPE]);
 
   if (contentType.startsWith(Constants.MIME_CE)) {
     // Structured
@@ -24,6 +18,8 @@ function resolveBindingName(payload, headers) {
       return STRUCTURED;
     } else {
       const err = new TypeError("structured+type not allowed");
+      // TODO Create a custom TypeError to add the errors attribute
+      // @ts-ignore
       err.errors = [contentType];
       throw err;
     }
@@ -33,6 +29,8 @@ function resolveBindingName(payload, headers) {
       return BINARY;
     } else {
       const err = new TypeError("content type not allowed");
+      // TODO Create a custom TypeError to add the errors attribute
+      // @ts-ignore
       err.errors = [contentType];
       throw err;
     }
@@ -40,6 +38,8 @@ function resolveBindingName(payload, headers) {
 }
 
 class Unmarshaller {
+  receiverByBinding: any;
+
   constructor(receiverByBinding) {
     this.receiverByBinding = receiverByBinding;
   }
@@ -60,11 +60,10 @@ class Unmarshaller {
 
     // Resolve the binding
     const bindingName = resolveBindingName(payload, sanityHeaders);
-    const cloudevent = this.receiverByBinding[bindingName]
-      .parse(payload, sanityHeaders);
+    const cloudevent = this.receiverByBinding[bindingName].parse(payload, sanityHeaders);
 
     return cloudevent;
   }
 }
 
-module.exports = Unmarshaller;
+export { Unmarshaller };

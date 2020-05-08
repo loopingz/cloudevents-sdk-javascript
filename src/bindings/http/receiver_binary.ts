@@ -2,22 +2,16 @@ const Constants = require("./constants.js");
 const Commons = require("./commons.js");
 const CloudEvent = require("../../cloudevent.js");
 
-const {
-  isDefinedOrThrow,
-  isStringOrObjectOrThrow
-} = require("../../utils/fun.js");
+const { isDefinedOrThrow, isStringOrObjectOrThrow } = require("../../utils/fun.js");
 
 function validateArgs(payload, attributes) {
   Array.of(payload)
-    .filter((p) => isDefinedOrThrow(p,
-      { message: "payload is null or undefined" }))
-    .filter((p) => isStringOrObjectOrThrow(p,
-      { message: "payload must be an object or a string" }))
+    .filter(p => isDefinedOrThrow(p, { message: "payload is null or undefined" }))
+    .filter(p => isStringOrObjectOrThrow(p, { message: "payload must be an object or a string" }))
     .shift();
 
   Array.of(attributes)
-    .filter((a) => isDefinedOrThrow(a,
-      { message: "attributes is null or undefined" }))
+    .filter(a => isDefinedOrThrow(a, { message: "attributes is null or undefined" }))
     .shift();
 }
 
@@ -29,7 +23,8 @@ function BinaryHTTPReceiver(
   Spec,
   specversion,
   extensionsPrefix,
-  checkDecorator) {
+  checkDecorator
+) {
   this.parsersByEncoding = parsersByEncoding;
   this.setterByHeader = setterByHeader;
   this.allowedContentTypes = allowedContentTypes;
@@ -41,7 +36,7 @@ function BinaryHTTPReceiver(
   this.checkDecorator = checkDecorator;
 }
 
-BinaryHTTPReceiver.prototype.check = function(payload, headers) {
+BinaryHTTPReceiver.prototype.check = function (payload, headers) {
   // Validation Level 0
   validateArgs(payload, headers);
 
@@ -58,22 +53,24 @@ BinaryHTTPReceiver.prototype.check = function(payload, headers) {
   }
 
   // Validation Level 1
-  if (!this.allowedContentTypes
-    .includes(sanityHeaders[Constants.HEADER_CONTENT_TYPE])) {
+  if (!this.allowedContentTypes.includes(sanityHeaders[Constants.HEADER_CONTENT_TYPE])) {
     const err = new TypeError("invalid content type");
+    // TODO Create a custom TypeError to add the errors attribute
+    // @ts-ignore
     err.errors = [sanityHeaders[Constants.HEADER_CONTENT_TYPE]];
     throw err;
   }
 
   this.requiredHeaders
-    .filter((required) => !sanityHeaders[required])
-    .forEach((required) => {
+    .filter(required => !sanityHeaders[required])
+    .forEach(required => {
       throw new TypeError(`header '${required}' not found`);
     });
 
-  if (sanityHeaders[Constants.DEFAULT_SPEC_VERSION_HEADER] !==
-    this.specversion) {
+  if (sanityHeaders[Constants.DEFAULT_SPEC_VERSION_HEADER] !== this.specversion) {
     const err = new TypeError("invalid spec version");
+    // TODO Create a custom TypeError to add the errors attribute
+    // @ts-ignore
     err.errors = [sanityHeaders[Constants.DEFAULT_SPEC_VERSION_HEADER]];
     throw err;
   }
@@ -86,7 +83,7 @@ function parserFor(parsersByEncoding, cloudevent, headers) {
   return parsersByEncoding[encoding][headers[Constants.HEADER_CONTENT_TYPE]];
 }
 
-BinaryHTTPReceiver.prototype.parse = function(payload, headers) {
+BinaryHTTPReceiver.prototype.parse = function (payload, headers) {
   this.check(payload, headers);
 
   // Clone and low case all headers names
@@ -97,8 +94,8 @@ BinaryHTTPReceiver.prototype.parse = function(payload, headers) {
 
   // dont worry, check() have seen what was required or not
   Array.from(Object.keys(this.setterByHeader))
-    .filter((header) => sanityHeaders[header])
-    .forEach((header) => {
+    .filter(header => sanityHeaders[header])
+    .forEach(header => {
       const setterName = this.setterByHeader[header].name;
       const parserFun = this.setterByHeader[header].parser;
 
@@ -110,21 +107,14 @@ BinaryHTTPReceiver.prototype.parse = function(payload, headers) {
     });
 
   // Parses the payload
-  const parsedPayload =
-      parserFor(this.parsersByEncoding, cloudevent, sanityHeaders)
-        .parse(payload);
+  const parsedPayload = parserFor(this.parsersByEncoding, cloudevent, sanityHeaders).parse(payload);
 
   // Every unprocessed header can be an extension
   Array.from(Object.keys(sanityHeaders))
-    .filter((value) => !processedHeaders.includes(value))
-    .filter((value) =>
-      value.startsWith(this.extensionsPrefix))
-    .map((extension) =>
-      extension.substring(this.extensionsPrefix.length)
-    ).forEach((extension) =>
-      cloudevent.addExtension(extension,
-        sanityHeaders[this.extensionsPrefix + extension])
-    );
+    .filter(value => !processedHeaders.includes(value))
+    .filter(value => value.startsWith(this.extensionsPrefix))
+    .map(extension => extension.substring(this.extensionsPrefix.length))
+    .forEach(extension => cloudevent.addExtension(extension, sanityHeaders[this.extensionsPrefix + extension]));
 
   // Sets the data
   cloudevent.data(parsedPayload);
@@ -136,4 +126,4 @@ BinaryHTTPReceiver.prototype.parse = function(payload, headers) {
   return cloudevent;
 };
 
-module.exports = BinaryHTTPReceiver;
+export { BinaryHTTPReceiver };

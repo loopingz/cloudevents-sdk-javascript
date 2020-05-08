@@ -1,18 +1,9 @@
 const { v4: uuidv4 } = require("uuid");
 const Ajv = require("ajv");
 
-const {
-  asData,
-  isBoolean,
-  isInteger,
-  isString,
-  isDate,
-  isBinary,
-  clone
-} = require("../utils/fun.js");
+const { asData, isBoolean, isInteger, isString, isDate, isBinary, clone } = require("../utils/fun.js");
 
-const isValidType = (v) =>
-  (isBoolean(v) || isInteger(v) || isString(v) || isDate(v) || isBinary(v));
+const isValidType = v => isBoolean(v) || isInteger(v) || isString(v) || isDate(v) || isBinary(v);
 
 const RESERVED_ATTRIBUTES = {
   type: "type",
@@ -130,34 +121,34 @@ function Spec1(_caller) {
   this.caller = _caller;
 
   // dataschema attribute
-  this.caller.prototype.dataschema = function(dataschema) {
+  this.caller.prototype.dataschema = function (dataschema) {
     this.spec.dataschema(dataschema);
     return this;
   };
-  this.caller.prototype.getDataschema = function() {
+  this.caller.prototype.getDataschema = function () {
     return this.spec.getDataschema();
   };
 
   // datacontenttype attribute
-  this.caller.prototype.dataContentType = function(contentType) {
+  this.caller.prototype.dataContentType = function (contentType) {
     this.spec.dataContentType(contentType);
     return this;
   };
-  this.caller.prototype.getDataContentType = function() {
+  this.caller.prototype.getDataContentType = function () {
     return this.spec.getDataContentType();
   };
 
   // subject attribute
-  this.caller.prototype.subject = function(_subject) {
+  this.caller.prototype.subject = function (_subject) {
     this.spec.subject(_subject);
     return this;
   };
-  this.caller.prototype.getSubject = function() {
+  this.caller.prototype.getSubject = function () {
     return this.spec.getSubject();
   };
 
   // format() method override
-  this.caller.prototype.format = function() {
+  this.caller.prototype.format = function () {
     // Check the constraints
     this.spec.check();
 
@@ -172,8 +163,7 @@ function Spec1(_caller) {
 
     // Handle when is binary, creating the data_base64
     if (isbin) {
-      payload[RESERVED_ATTRIBUTES.data_base64] =
-        this.spec.payload[RESERVED_ATTRIBUTES.data];
+      payload[RESERVED_ATTRIBUTES.data_base64] = this.spec.payload[RESERVED_ATTRIBUTES.data];
       delete payload[RESERVED_ATTRIBUTES.data];
 
       return this.formatter.format(payload);
@@ -187,89 +177,91 @@ function Spec1(_caller) {
 /*
  * Check the spec constraints
  */
-Spec1.prototype.check = function(ce) {
-  const toCheck = (!ce ? this.payload : ce);
+Spec1.prototype.check = function (ce) {
+  const toCheck = !ce ? this.payload : ce;
 
   if (!isValidAgainstSchema(toCheck)) {
     const err = new TypeError("invalid payload");
+    // TODO Create a custom TypeError to add the errors attribute
+    // @ts-ignore
     err.errors = isValidAgainstSchema.errors;
     throw err;
   }
 };
 
-Spec1.prototype.id = function(_id) {
+Spec1.prototype.id = function (_id) {
   this.payload.id = _id;
   return this;
 };
 
-Spec1.prototype.getId = function() {
+Spec1.prototype.getId = function () {
   return this.payload.id;
 };
 
-Spec1.prototype.source = function(_source) {
+Spec1.prototype.source = function (_source) {
   this.payload.source = _source;
   return this;
 };
 
-Spec1.prototype.getSource = function() {
+Spec1.prototype.getSource = function () {
   return this.payload.source;
 };
 
-Spec1.prototype.specversion = function() {
+Spec1.prototype.specversion = function () {
   // does not set! This is right
   return this;
 };
 
-Spec1.prototype.getSpecversion = function() {
+Spec1.prototype.getSpecversion = function () {
   return this.payload.specversion;
 };
 
-Spec1.prototype.type = function(_type) {
+Spec1.prototype.type = function (_type) {
   this.payload.type = _type;
   return this;
 };
 
-Spec1.prototype.getType = function() {
+Spec1.prototype.getType = function () {
   return this.payload.type;
 };
 
-Spec1.prototype.dataContentType = function(_contenttype) {
+Spec1.prototype.dataContentType = function (_contenttype) {
   this.payload.datacontenttype = _contenttype;
   return this;
 };
-Spec1.prototype.getDataContentType = function() {
+Spec1.prototype.getDataContentType = function () {
   return this.payload.datacontenttype;
 };
 
-Spec1.prototype.dataschema = function(_schema) {
+Spec1.prototype.dataschema = function (_schema) {
   this.payload.dataschema = _schema;
   return this;
 };
-Spec1.prototype.getDataschema = function() {
+Spec1.prototype.getDataschema = function () {
   return this.payload.dataschema;
 };
 
-Spec1.prototype.subject = function(_subject) {
+Spec1.prototype.subject = function (_subject) {
   this.payload.subject = _subject;
   return this;
 };
-Spec1.prototype.getSubject = function() {
+Spec1.prototype.getSubject = function () {
   return this.payload.subject;
 };
 
-Spec1.prototype.time = function(_time) {
+Spec1.prototype.time = function (_time) {
   this.payload.time = _time.toISOString();
   return this;
 };
-Spec1.prototype.getTime = function() {
+Spec1.prototype.getTime = function () {
   return this.payload.time;
 };
 
-Spec1.prototype.data = function(_data) {
+Spec1.prototype.data = function (_data) {
   this.payload.data = _data;
   return this;
 };
-Spec1.prototype.getData = function() {
+Spec1.prototype.getData = function () {
   const dct = this.payload.datacontenttype;
 
   if (dct) {
@@ -279,7 +271,7 @@ Spec1.prototype.getData = function() {
   return this.payload.data;
 };
 
-Spec1.prototype.addExtension = function(key, value) {
+Spec1.prototype.addExtension = function (key, value) {
   if (!Object.prototype.hasOwnProperty.call(RESERVED_ATTRIBUTES, key)) {
     if (isValidType(value)) {
       this.payload[key] = value;
@@ -292,4 +284,4 @@ Spec1.prototype.addExtension = function(key, value) {
   return this;
 };
 
-module.exports = Spec1;
+export { Spec1 };

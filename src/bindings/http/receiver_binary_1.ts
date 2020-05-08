@@ -6,27 +6,29 @@ const Base64Parser = require("../../formats/base64.js");
 
 const BinaryHTTPReceiver = require("./receiver_binary.js");
 
-const {
-  isString,
-  isBase64
-} = require("../../utils/fun.js");
+import { isString, isBase64 } from "./../../utils/fun";
 
 const parserByType = {};
 parserByType[Constants.MIME_JSON] = new JSONParser();
 parserByType[Constants.MIME_OCTET_STREAM] = {
-  parse(payload) { return payload; }
+  parse(payload) {
+    return payload;
+  }
 };
 
-const parsersByEncoding = {};
+const parsersByEncoding: any = {};
 parsersByEncoding.null = parserByType;
+// TODO Check this one
+// @ts-ignore
 parsersByEncoding[undefined] = parserByType;
 
 // base64
 parsersByEncoding[Constants.ENCODING_BASE64] = {};
-parsersByEncoding[Constants.ENCODING_BASE64][Constants.MIME_JSON] =
-  new JSONParser(new Base64Parser());
+parsersByEncoding[Constants.ENCODING_BASE64][Constants.MIME_JSON] = new JSONParser(new Base64Parser());
 parsersByEncoding[Constants.ENCODING_BASE64][Constants.MIME_OCTET_STREAM] = {
-  parse(payload) { return payload; }
+  parse(payload) {
+    return payload;
+  }
 };
 
 const allowedContentTypes = [];
@@ -45,7 +47,7 @@ requiredHeaders.push(Constants.BINARY_HEADERS_1.ID);
 const setterByHeader = {};
 setterByHeader[Constants.BINARY_HEADERS_1.TYPE] = {
   name: "type",
-  parser: (v) => v
+  parser: v => v
 };
 setterByHeader[Constants.BINARY_HEADERS_1.SPEC_VERSION] = {
   name: "specversion",
@@ -53,37 +55,36 @@ setterByHeader[Constants.BINARY_HEADERS_1.SPEC_VERSION] = {
 };
 setterByHeader[Constants.BINARY_HEADERS_1.SOURCE] = {
   name: "source",
-  parser: (v) => v
+  parser: v => v
 };
 setterByHeader[Constants.BINARY_HEADERS_1.ID] = {
   name: "id",
-  parser: (v) => v
+  parser: v => v
 };
 setterByHeader[Constants.BINARY_HEADERS_1.TIME] = {
   name: "time",
-  parser: (v) => new Date(Date.parse(v))
+  parser: v => new Date(Date.parse(v))
 };
 setterByHeader[Constants.BINARY_HEADERS_1.DATA_SCHEMA] = {
   name: "dataschema",
-  parser: (v) => v
+  parser: v => v
 };
 setterByHeader[Constants.HEADER_CONTENT_TYPE] = {
   name: "dataContentType",
-  parser: (v) => v
+  parser: v => v
 };
 setterByHeader[Constants.BINARY_HEADERS_1.SUBJECT] = {
   name: "subject",
-  parser: (v) => v
+  parser: v => v
 };
 
 // Leaving these in place for now. TODO: fixme
 // eslint-disable-next-line
-function checkDecorator(payload, headers) {
-}
+function checkDecorator(payload, headers) {}
 
 // Leaving this in place for now. TODO: fixme
 // eslint-disable-next-line
-function Receiver(configuration) {
+function Receiver(configuration = undefined) {
   this.receiver = new BinaryHTTPReceiver(
     parsersByEncoding,
     setterByHeader,
@@ -96,19 +97,17 @@ function Receiver(configuration) {
   );
 }
 
-Receiver.prototype.check = function(payload, headers) {
+Receiver.prototype.check = function (payload, headers) {
   this.receiver.check(payload, headers);
 };
 
-Receiver.prototype.parse = function(payload, headers) {
+Receiver.prototype.parse = function (payload, headers) {
   // firstly specific local checks
   this.check(payload, headers);
 
-  payload = isString(payload) && isBase64(payload)
-    ? Buffer.from(payload, "base64").toString()
-    : payload;
+  payload = isString(payload) && isBase64(payload) ? Buffer.from(payload, "base64").toString() : payload;
 
   return this.receiver.parse(payload, headers);
 };
 
-module.exports = Receiver;
+export { Receiver };

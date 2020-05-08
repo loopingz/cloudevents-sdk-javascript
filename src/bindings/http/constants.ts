@@ -1,5 +1,5 @@
 // Commons
-module.exports = Object.freeze({
+const Constants = Object.freeze({
   HEADERS: "headers",
   CHARSET_DEFAULT: "utf-8",
 
@@ -69,3 +69,5 @@ module.exports = Object.freeze({
     DATA_BASE64: "data_base64"
   }
 });
+
+export { Constants };

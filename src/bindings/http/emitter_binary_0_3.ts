@@ -1,64 +1,60 @@
-const BinaryHTTPEmitter = require("./emitter_binary.js");
+import { BinaryHTTPEmitter } from "./emitter_binary";
 
-const Constants = require("./constants.js");
+import { Constants } from "./constants";
 
-const headerByGetter = {};
+const headerByGetter: any = {};
 
 headerByGetter.getDataContentType = {
   name: Constants.HEADER_CONTENT_TYPE,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getDataContentEncoding = {
   name: Constants.BINARY_HEADERS_03.CONTENT_ENCONDING,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getSubject = {
   name: Constants.BINARY_HEADERS_03.SUBJECT,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getType = {
   name: Constants.BINARY_HEADERS_03.TYPE,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getSpecversion = {
   name: Constants.BINARY_HEADERS_03.SPEC_VERSION,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getSource = {
   name: Constants.BINARY_HEADERS_03.SOURCE,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getId = {
   name: Constants.BINARY_HEADERS_03.ID,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getTime = {
   name: Constants.BINARY_HEADERS_03.TIME,
-  parser: (v) => v
+  parser: v => v
 };
 
 headerByGetter.getSchemaurl = {
   name: Constants.BINARY_HEADERS_03.SCHEMA_URL,
-  parser: (v) => v
+  parser: v => v
 };
 
 function HTTPBinary(configuration) {
-  this.emitter = new BinaryHTTPEmitter(
-    configuration,
-    headerByGetter,
-    Constants.BINARY_HEADERS_03.EXTENSIONS_PREFIX
-  );
+  this.emitter = new BinaryHTTPEmitter(configuration, headerByGetter, Constants.BINARY_HEADERS_03.EXTENSIONS_PREFIX);
 }
 
-HTTPBinary.prototype.emit = function(cloudevent) {
+HTTPBinary.prototype.emit = function (cloudevent) {
   return this.emitter.emit(cloudevent);
 };
 
-module.exports = HTTPBinary;
+export { HTTPBinary };

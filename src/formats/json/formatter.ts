@@ -12,4 +12,4 @@ class JSONFormatter {
   }
 }
 
-module.exports = JSONFormatter;
+export { JSONFormatter };
